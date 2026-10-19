@@ -1,0 +1,15 @@
+{
+  "info": {
+    "name": "FreshMart API (current catalog endpoints)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Public catalog endpoints implemented so far. Authentication and commerce requests will be added in later milestones."
+  },
+  "variable": [{"key": "baseUrl", "value": "http://localhost:8080"}],
+  "item": [
+    {"name": "List products", "request": {"method": "GET", "url": "{{baseUrl}}/api/products?page=0&size=12&sort=name"}},
+    {"name": "Search and filter products", "request": {"method": "GET", "url": "{{baseUrl}}/api/products?q=mango&category=fruit&minPrice=20&maxPrice=250&sort=price-asc"}},
+    {"name": "Product details", "request": {"method": "GET", "url": "{{baseUrl}}/api/products/1"}},
+    {"name": "Categories", "request": {"method": "GET", "url": "{{baseUrl}}/api/categories"}},
+    {"name": "Category products", "request": {"method": "GET", "url": "{{baseUrl}}/api/categories/1/products?page=0&size=12"}}
+  ]
+}

@@ -1,0 +1,13 @@
+target/
+.tools/
+.idea/
+.vscode/
+*.iml
+.env
+.env.*
+!.env.example
+application-local.yml
+application-local.yaml
+*.log
+*.mv.db
+*.sql.gz

@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: freshmart-api
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/freshmart?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${DB_USERNAME:freshmart}
+    password: ${DB_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+server:
+  port: ${PORT:8080}
+app:
+  cors:
+    allowed-origin: ${FRONTEND_ORIGIN:http://localhost:5173}
+  jwt:
+    issuer: ${JWT_ISSUER:freshmart-local}
+    secret: ${JWT_SECRET:}
+    access-minutes: ${JWT_ACCESS_MINUTES:15}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
