@@ -6,5 +6,6 @@ public class Category {
  @Column(nullable=false,unique=true,length=80) private String name;
  @Column(nullable=false,unique=true,length=90) private String slug;
  protected Category(){}
+ public Category(String name,String slug){this.name=name;this.slug=slug;}
  public Long getId(){return id;} public String getName(){return name;} public String getSlug(){return slug;}
 }

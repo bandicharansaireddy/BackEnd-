@@ -13,8 +13,10 @@ public class Product {
  @Column(name="image_url",length=500) private String imageUrl;
  @Column(nullable=false) private boolean active;
  protected Product(){}
+ public Product(Category category,String name,String description,BigDecimal priceInr,String unit,int stockQuantity,String imageUrl){this.category=category;this.name=name;this.description=description;this.priceInr=priceInr;this.unit=unit;this.stockQuantity=stockQuantity;this.imageUrl=imageUrl;this.active=true;}
  public Long getId(){return id;} public String getName(){return name;} public String getDescription(){return description;}
  public BigDecimal getPriceInr(){return priceInr;} public String getUnit(){return unit;} public int getStockQuantity(){return stockQuantity;}
  public String getImageUrl(){return imageUrl;} public Long getCategoryId(){return category.getId();} public String getCategoryName(){return category.getName();}
  public boolean isActive(){return active;} public void setStockQuantity(int quantity){this.stockQuantity=quantity;}
+ public void update(Category category,String name,String description,BigDecimal priceInr,String unit,int stockQuantity,String imageUrl,boolean active){this.category=category;this.name=name;this.description=description;this.priceInr=priceInr;this.unit=unit;this.stockQuantity=stockQuantity;this.imageUrl=imageUrl;this.active=active;}
 }

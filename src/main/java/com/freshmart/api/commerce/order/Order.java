@@ -26,5 +26,6 @@ public class Order {
  @PrePersist void onCreate(){if(createdAt==null)createdAt=Instant.now();}
  public void addItem(OrderItem item){items.add(item);item.setOrder(this);}
  public Long getId(){return id;} public Long getUserId(){return user.getId();} public String getStatus(){return status;} public String getPaymentStatus(){return paymentStatus;} public BigDecimal getSubtotalInr(){return subtotalInr;} public BigDecimal getDeliveryFeeInr(){return deliveryFeeInr;} public BigDecimal getTotalInr(){return totalInr;} public String getFullName(){return fullName;} public String getMobile(){return mobile;} public String getAddressLine(){return addressLine;} public String getCity(){return city;} public String getPincode(){return pincode;} public Instant getCreatedAt(){return createdAt;} public List<OrderItem> getItems(){return items;}
+ public void setStatus(String status){this.status=status;}
  public record AddressSnapshot(String fullName,String mobile,String addressLine,String city,String pincode){}
 }

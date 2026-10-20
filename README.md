@@ -13,7 +13,13 @@ Spring Boot 3 / Java 17 API for the separate FreshMart frontend repository. The 
 - Owner-scoped persistent carts and delivery addresses, plus transactional order creation with product locks, server-calculated totals, and stock updates
 - MySQL credentials and JWT signing secret are read from the environment
 
-Admin product/category/order management, user administration, a production mail/SMS provider, and full database integration testing remain future milestones. Orders are recorded as `DEMO_UNPAID`; this project does not process payment.
+Admin product/category/order management and paged user listings are available under `/api/admin/**` for accounts whose database role is `ADMIN`. Public registration always creates `CUSTOMER` accounts. Promote a trusted local account manually in Workbench after confirming its email; do not expose role editing through the public API:
+
+```sql
+UPDATE users SET role = 'ADMIN' WHERE email = 'your-local-admin@example.com';
+```
+
+Sign in again (or refresh the session) to receive an access token with the updated role. Order status transitions are restricted; cancelling a placed or processing demo order restores its reserved stock. A production mail/SMS provider and full database integration testing remain future milestones. Orders are recorded as `DEMO_UNPAID`; this project does not process payment.
 
 ## Prerequisites
 
@@ -80,6 +86,14 @@ POST http://localhost:8080/api/addresses            (Authorization: Bearer <shor
 POST http://localhost:8080/api/orders               (Authorization: Bearer <short-lived access token>)
 GET  http://localhost:8080/api/orders               (Authorization: Bearer <short-lived access token>)
 GET  http://localhost:8080/api/orders/{id}          (Authorization: Bearer <short-lived access token>)
+GET  http://localhost:8080/api/admin/dashboard      (ADMIN role required)
+POST http://localhost:8080/api/admin/products       (ADMIN role required)
+PUT  http://localhost:8080/api/admin/products/{id}  (ADMIN role required)
+DELETE http://localhost:8080/api/admin/products/{id} (soft deactivation; ADMIN required)
+POST http://localhost:8080/api/admin/categories     (ADMIN role required)
+GET  http://localhost:8080/api/admin/orders         (ADMIN role required)
+PATCH http://localhost:8080/api/admin/orders/{id}/status (ADMIN role required)
+GET  http://localhost:8080/api/admin/users          (ADMIN role required)
 ```
 
 Cart item request: `{"productId":1,"quantity":2}`. Address request: `{"fullName":"Fresh Buyer","mobile":"9876543210","addressLine":"12 Market Road, Jubilee Hills","city":"Hyderabad","pincode":"500033"}`. Place an order with `{"addressId":1}`; the API reads the authenticated user's cart, checks stock under product row locks, computes subtotal and delivery fee, decrements inventory, clears the cart, and returns an order marked `DEMO_UNPAID`. Clients must not submit prices or totals.

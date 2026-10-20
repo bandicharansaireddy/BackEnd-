@@ -8,4 +8,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByMobile(String mobile);
     Optional<User> findByEmailIgnoreCaseOrMobile(String email, String mobile);
     Optional<User> findByIdAndActiveTrue(Long id);
+    long countByActiveTrue();
 }

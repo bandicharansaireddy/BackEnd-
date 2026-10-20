@@ -14,5 +14,5 @@ public class OrderItem {
  protected OrderItem(){}
  public OrderItem(Product product,int quantity){this.product=product;this.productName=product.getName();this.unit=product.getUnit();this.unitPriceInr=product.getPriceInr();this.quantity=quantity;}
  public void setOrder(Order order){this.order=order;}
- public Long getId(){return id;} public Long getProductId(){return product.getId();} public String getProductName(){return productName;} public String getUnit(){return unit;} public BigDecimal getUnitPriceInr(){return unitPriceInr;} public int getQuantity(){return quantity;}
+ public Long getId(){return id;} public Long getProductId(){return product.getId();} public Product getProduct(){return product;} public String getProductName(){return productName;} public String getUnit(){return unit;} public BigDecimal getUnitPriceInr(){return unitPriceInr;} public int getQuantity(){return quantity;}
 }
