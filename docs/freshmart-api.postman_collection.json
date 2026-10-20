@@ -1,25 +1,367 @@
 {
   "info": {
-    "name": "FreshMart API (catalog and auth endpoints)",
+    "name": "FreshMart API (catalog, auth, and commerce)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Catalog and initial account/session endpoints currently implemented. Password reset and commerce endpoints remain future work."
+    "description": "Catalog, account/session, persistent cart, delivery addresses, and unpaid demo order endpoints. No payment is processed."
   },
-  "variable": [{"key": "baseUrl", "value": "http://localhost:8080"}, {"key": "accessToken", "value": ""}, {"key": "resetToken", "value": ""}, {"key": "password", "value": ""}, {"key": "otp", "value": ""}],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "resetToken",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": ""
+    },
+    {
+      "key": "otp",
+      "value": ""
+    }
+  ],
   "item": [
-    {"name": "List products", "request": {"method": "GET", "url": "{{baseUrl}}/api/products?page=0&size=12&sort=name"}},
-    {"name": "Search and filter products", "request": {"method": "GET", "url": "{{baseUrl}}/api/products?q=mango&category=fruit&minPrice=20&maxPrice=250&sort=price-asc"}},
-    {"name": "Product details", "request": {"method": "GET", "url": "{{baseUrl}}/api/products/1"}},
-    {"name": "Categories", "request": {"method": "GET", "url": "{{baseUrl}}/api/categories"}},
-    {"name": "Category products", "request": {"method": "GET", "url": "{{baseUrl}}/api/categories/1/products?page=0&size=12"}},
-    {"name": "Register", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"fullName\": \"Fresh Buyer\",\n  \"email\": \"buyer@example.com\",\n  \"mobile\": \"9876543210\",\n  \"password\": \"{{password}}\",\n  \"confirmPassword\": \"{{password}}\"\n}"}, "url": "{{baseUrl}}/api/auth/register"}},
-    {"name": "Login", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"identifier\": \"buyer@example.com\",\n  \"password\": \"{{password}}\"\n}"}, "url": "{{baseUrl}}/api/auth/login"}},
-    {"name": "Refresh (browser Origin required)", "request": {"method": "POST", "header": [{"key": "Origin", "value": "http://localhost:5173"}], "url": "{{baseUrl}}/api/auth/refresh"}},
-    {"name": "Logout (browser Origin required)", "request": {"method": "POST", "header": [{"key": "Origin", "value": "http://localhost:5173"}], "url": "{{baseUrl}}/api/auth/logout"}},
-    {"name": "Current user", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}], "url": "{{baseUrl}}/api/auth/me"}},
-    {"name": "Forgot password", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"email\": \"buyer@example.com\"\n}"}, "url": "{{baseUrl}}/api/auth/forgot-password"}},
-    {"name": "Local OTP inbox (local profile only)", "request": {"method": "GET", "url": "{{baseUrl}}/api/dev/otp?email=buyer%40example.com"}},
-    {"name": "Verify OTP", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"email\": \"buyer@example.com\",\n  \"otp\": \"{{otp}}\"\n}"}, "url": "{{baseUrl}}/api/auth/verify-otp"}},
-    {"name": "Reset password", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"resetToken\": \"{{resetToken}}\",\n  \"newPassword\": \"{{password}}\",\n  \"confirmPassword\": \"{{password}}\"\n}"}, "url": "{{baseUrl}}/api/auth/reset-password"}},
-    {"name": "Change password", "request": {"method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Authorization", "value": "Bearer {{accessToken}}"}], "body": {"mode": "raw", "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{password}}\",\n  \"confirmPassword\": \"{{password}}\"\n}"}, "url": "{{baseUrl}}/api/auth/change-password"}}
+    {
+      "name": "List products",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/products?page=0&size=12&sort=name"
+      }
+    },
+    {
+      "name": "Search and filter products",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/products?q=mango&category=fruit&minPrice=20&maxPrice=250&sort=price-asc"
+      }
+    },
+    {
+      "name": "Product details",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/products/1"
+      }
+    },
+    {
+      "name": "Categories",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/categories"
+      }
+    },
+    {
+      "name": "Category products",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/categories/1/products?page=0&size=12"
+      }
+    },
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Fresh Buyer\",\n  \"email\": \"buyer@example.com\",\n  \"mobile\": \"9876543210\",\n  \"password\": \"{{password}}\",\n  \"confirmPassword\": \"{{password}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"identifier\": \"buyer@example.com\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      }
+    },
+    {
+      "name": "Refresh (browser Origin required)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "http://localhost:5173"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/refresh"
+      }
+    },
+    {
+      "name": "Logout (browser Origin required)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "http://localhost:5173"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/logout"
+      }
+    },
+    {
+      "name": "Current user",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/me"
+      }
+    },
+    {
+      "name": "Forgot password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"buyer@example.com\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/forgot-password"
+      }
+    },
+    {
+      "name": "Local OTP inbox (local profile only)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/dev/otp?email=buyer%40example.com"
+      }
+    },
+    {
+      "name": "Verify OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"buyer@example.com\",\n  \"otp\": \"{{otp}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/verify-otp"
+      }
+    },
+    {
+      "name": "Reset password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"resetToken\": \"{{resetToken}}\",\n  \"newPassword\": \"{{password}}\",\n  \"confirmPassword\": \"{{password}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/reset-password"
+      }
+    },
+    {
+      "name": "Change password",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{password}}\",\n  \"confirmPassword\": \"{{password}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/change-password"
+      }
+    },
+    {
+      "name": "Get cart",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/cart",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add cart item",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/cart/items",
+        "body": {
+          "raw": "{\r\n  \"productId\": 1,\r\n  \"quantity\": 2\r\n}",
+          "mode": "raw"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Update cart item",
+      "request": {
+        "method": "PUT",
+        "url": "{{baseUrl}}/api/cart/items/1",
+        "body": {
+          "raw": "{\r\n  \"quantity\": 3\r\n}",
+          "mode": "raw"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Remove cart item",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/cart/items/1",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Create address",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/addresses",
+        "body": {
+          "raw": "{\r\n  \"addressLine\": \"12 Market Road, Jubilee Hills\",\r\n  \"fullName\": \"Fresh Buyer\",\r\n  \"pincode\": \"500033\",\r\n  \"mobile\": \"9876543210\",\r\n  \"city\": \"Hyderabad\"\r\n}",
+          "mode": "raw"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "List addresses",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/addresses",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Place unpaid demo order",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/orders",
+        "body": {
+          "raw": "{\r\n  \"addressId\": 1\r\n}",
+          "mode": "raw"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "List my orders",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/orders?page=0&size=10",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Get my order",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/orders/1",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ]
+      }
+    }
   ]
 }
