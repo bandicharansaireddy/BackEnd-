@@ -25,6 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             try {
                 Claims claims = tokens.parse(header.substring(7));
+                if (!"access".equals(claims.get("purpose", String.class))) throw new IllegalArgumentException("Wrong token purpose");
                 String userId = claims.getSubject();
                 String role = claims.get("role", String.class);
                 var auth = new UsernamePasswordAuthenticationToken(userId, null,

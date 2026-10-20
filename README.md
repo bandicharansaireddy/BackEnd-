@@ -9,9 +9,10 @@ Spring Boot 3 / Java 17 API for the separate FreshMart frontend repository. The 
 - Public product/category read APIs with paging, search, category, price filtering, and sorting
 - DTO responses, CORS origin configuration, and Hibernate schema validation
 - Registration, email/mobile login, BCrypt password hashes, `/me`, short-lived issuer-checked JWT access tokens, and rotating hashed refresh sessions in HttpOnly cookies
+- Forgot-password OTP creation/verification, attempt and expiry checks, password change/reset, and refresh-session revocation
 - MySQL credentials and JWT signing secret are read from the environment
 
-Password reset OTP, change password, persistent carts, addresses, orders, admin APIs, and complete session invalidation remain future milestones. Do not treat this API as production-ready until those flows and their tests are implemented.
+Persistent carts, addresses, orders, admin APIs, and a production mail/SMS provider remain future milestones. Do not treat this API as production-ready until those flows and their tests are implemented.
 
 ## Prerequisites
 
@@ -49,7 +50,7 @@ $env:JWT_SECRET = [Convert]::ToBase64String($keyBytes)
 mvn spring-boot:run
 ```
 
-Alternatively, copy `application-local.example.yml` to ignored `application-local.yml`, supply values via environment variables, and activate `local` with `SPRING_PROFILES_ACTIVE=local`. Never place real credentials in tracked YAML.
+Alternatively, copy `application-local.example.yml` to ignored `application-local.yml`, supply values via environment variables, and activate `local` with `SPRING_PROFILES_ACTIVE=local`. The local profile stores OTP messages in memory and exposes them once at `GET http://localhost:8080/api/dev/otp?email=buyer@example.com`; the endpoint accepts loopback requests only. OTPs expire after five minutes and are never logged. Outside the `local` profile, the no-op delivery adapter does not send mail; configure a real provider before deploying password recovery. Never place real credentials in tracked YAML.
 
 Startup order: start MySQL, start the backend at `http://localhost:8080`, then start the frontend at `http://localhost:5173`.
 
@@ -65,13 +66,17 @@ POST http://localhost:8080/api/auth/login
 POST http://localhost:8080/api/auth/refresh
 POST http://localhost:8080/api/auth/logout
 GET http://localhost:8080/api/auth/me  (Authorization: Bearer <short-lived access token>)
+POST http://localhost:8080/api/auth/forgot-password
+POST http://localhost:8080/api/auth/verify-otp
+POST http://localhost:8080/api/auth/reset-password
+PUT  http://localhost:8080/api/auth/change-password  (Authorization: Bearer <short-lived access token>)
 ```
 
 See `docs/freshmart-api.postman_collection.json` for an importable Postman collection. Product responses use a stable `content`, `number`, `size`, and totals page envelope. Prices are server-owned INR values; clients must not submit totals for order calculation.
 
 ## Security status
 
-Refresh cookies are HttpOnly, SameSite=Strict, scoped to `/api/auth`, and use the configurable Secure flag (`app.jwt.refresh-secure`, enable it for HTTPS deployments). Refresh and logout require the exact configured frontend `Origin`. Access tokens are returned in JSON and should remain in frontend memory; the refresh token is never returned to JavaScript. Logout revokes the supplied refresh session; access JWTs expire after a short configured lifetime. Public catalog/auth entry points are open; other routes require a valid signed JWT. Password reset OTP delivery, rate limits, password change, invalidating all sessions after reset, admin roles, and broader authorization tests remain unfinished. No payment-card data is collected.
+Refresh cookies are HttpOnly, SameSite=Strict, scoped to `/api/auth`, and use the configurable Secure flag (`JWT_REFRESH_SECURE=true` for HTTPS deployments). Refresh and logout require the exact configured frontend `Origin`. Access tokens are returned in JSON and should remain in frontend memory; the refresh token is never returned to JavaScript. Logout revokes the supplied refresh session; password changes/resets revoke all refresh sessions; access JWTs expire after a short configured lifetime. Reset codes are BCrypt-hashed in MySQL, expire after five minutes, allow five verification attempts, and can be requested once per account per minute. Forgot-password requests are limited to ten per source IP per fifteen-minute window using an HMAC of the address (no raw IP is stored); put the API behind a trusted proxy and configure its network limits as well. The reset challenge is a one-use, five-minute JWT bound to the verified OTP row. Public catalog/auth entry points are open; other routes require a valid signed access JWT. Admin roles and broader ownership tests remain unfinished. No payment-card data is collected.
 
 ## Build and tests
 

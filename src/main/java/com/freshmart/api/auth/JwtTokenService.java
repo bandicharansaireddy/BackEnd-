@@ -34,13 +34,20 @@ public class JwtTokenService {
 
     public String issue(Long userId, String role) {
         Instant now = Instant.now();
-        return Jwts.builder().issuer(issuer).subject(userId.toString()).claim("role", role)
+        return Jwts.builder().issuer(issuer).subject(userId.toString()).claim("role", role).claim("purpose", "access")
             .issuedAt(Date.from(now)).expiration(Date.from(now.plusSeconds(accessMinutes * 60)))
             .signWith(key).compact();
     }
 
     public Claims parse(String token) {
         return Jwts.parser().verifyWith(key).requireIssuer(issuer).build().parseSignedClaims(token).getPayload();
+    }
+
+    public String issueReset(Long userId, String otpId) {
+        Instant now = Instant.now();
+        return Jwts.builder().issuer(issuer).subject(userId.toString()).claim("purpose", "password_reset")
+            .claim("otpId", otpId).issuedAt(Date.from(now)).expiration(Date.from(now.plusSeconds(300)))
+            .signWith(key).compact();
     }
 
     public long accessLifetimeSeconds() { return accessMinutes * 60; }

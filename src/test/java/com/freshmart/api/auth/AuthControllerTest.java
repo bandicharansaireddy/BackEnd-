@@ -20,13 +20,16 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(AuthController.class)
+@WebMvcTest(value = AuthController.class, properties = "app.jwt.secret=VGhpc0lzQVN0dW55VGVzdEtleUZvckZyZXNobWFydCE=")
 @AutoConfigureMockMvc(addFilters = false)
 @Import(SecurityConfig.class)
 class AuthControllerTest {
     @Autowired private MockMvc mvc;
     @MockitoBean private UserRepository users;
     @MockitoBean private RefreshSessionRepository sessions;
+    @MockitoBean private PasswordResetOtpRepository resetOtps;
+    @MockitoBean private PasswordResetRateLimitRepository rateLimits;
+    @MockitoBean private OtpDelivery otpDelivery;
     @MockitoBean private JwtTokenService tokens;
     @MockitoBean private JwtAuthenticationFilter jwtFilter;
 
@@ -123,7 +126,7 @@ class AuthControllerTest {
         ReflectionTestUtils.setField(user, "id", 42L);
         ReflectionTestUtils.setField(user, "createdAt", Instant.now());
         RefreshSession prior = new RefreshSession("prior-session", user, "prior-hash", Instant.now().plusSeconds(600));
-        when(sessions.findByTokenHash(anyString())).thenReturn(Optional.of(prior));
+        when(sessions.findByTokenHashForUpdate(anyString())).thenReturn(Optional.of(prior));
         when(tokens.issue(42L, "CUSTOMER")).thenReturn("next-access-token");
 
         mvc.perform(post("/api/auth/refresh").cookie(new Cookie("freshmart_refresh", "opaque-token"))
@@ -136,5 +139,50 @@ class AuthControllerTest {
         verify(sessions, times(2)).save(saved.capture());
         org.junit.jupiter.api.Assertions.assertNotNull(saved.getAllValues().get(0).getRevokedAt());
         org.junit.jupiter.api.Assertions.assertTrue(saved.getAllValues().get(1).isValidAt(Instant.now()));
+    }
+
+    @Test
+    void forgotPasswordUsesTheSameResponseForUnknownAccounts() throws Exception {
+        when(users.findByEmailIgnoreCaseOrMobile("absent@example.com", "absent@example.com"))
+            .thenReturn(Optional.empty());
+        mvc.perform(post("/api/auth/forgot-password").contentType("application/json")
+                .content("{\"email\":\"absent@example.com\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.message").value("If the account exists, a verification code has been sent."));
+        verifyNoInteractions(resetOtps, otpDelivery);
+    }
+
+    @Test
+    void wrongOtpIncrementsAttemptCounter() throws Exception {
+        User user = new User("Fresh Buyer", "buyer@example.com", "9876543210", "hash");
+        ReflectionTestUtils.setField(user, "id", 42L);
+        PasswordResetOtp otp = new PasswordResetOtp("otp-id", user,
+            new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("123456"), Instant.now().plusSeconds(300));
+        when(users.findByEmailIgnoreCaseOrMobile("buyer@example.com", "buyer@example.com")).thenReturn(Optional.of(user));
+        when(resetOtps.findActiveForUpdate(42L)).thenReturn(java.util.List.of(otp));
+
+        for (int attempt = 0; attempt < 6; attempt++) {
+            mvc.perform(post("/api/auth/verify-otp").contentType("application/json")
+                    .content("{\"email\":\"buyer@example.com\",\"otp\":\"111111\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid or expired verification code"));
+        }
+        org.junit.jupiter.api.Assertions.assertEquals(5, otp.getAttempts());
+        verify(resetOtps, times(5)).save(otp);
+    }
+
+    @Test
+    void expiredOtpIsRejected() throws Exception {
+        User user = new User("Fresh Buyer", "buyer@example.com", "9876543210", "hash");
+        ReflectionTestUtils.setField(user, "id", 42L);
+        PasswordResetOtp otp = new PasswordResetOtp("otp-id", user,
+            new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("123456"), Instant.now().minusSeconds(1));
+        when(users.findByEmailIgnoreCaseOrMobile("buyer@example.com", "buyer@example.com")).thenReturn(Optional.of(user));
+        when(resetOtps.findActiveForUpdate(42L)).thenReturn(java.util.List.of(otp));
+
+        mvc.perform(post("/api/auth/verify-otp").contentType("application/json")
+                .content("{\"email\":\"buyer@example.com\",\"otp\":\"123456\"}"))
+            .andExpect(status().isBadRequest());
+        verify(resetOtps, never()).save(any(PasswordResetOtp.class));
     }
 }

@@ -19,6 +19,19 @@ public final class AuthDtos {
     }
 
     public record LoginRequest(@NotBlank @Size(max = 254) String identifier, @NotBlank @Size(max = 72) String password) { }
+    public record ForgotPasswordRequest(@NotBlank @Email @Size(max = 254) String email) { }
+    public record VerifyOtpRequest(@NotBlank @Email @Size(max = 254) String email, @NotBlank @Pattern(regexp = "[0-9]{6}") String otp) { }
+    public record ResetPasswordRequest(@NotBlank String resetToken,
+        @NotBlank @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,72}$") String newPassword,
+        @NotBlank @Size(max = 72) String confirmPassword) {
+        @AssertTrue(message = "Passwords must match") public boolean isPasswordConfirmed() { return newPassword != null && newPassword.equals(confirmPassword); }
+    }
+    public record ChangePasswordRequest(@NotBlank @Size(max = 72) String currentPassword,
+        @NotBlank @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,72}$") String newPassword,
+        @NotBlank @Size(max = 72) String confirmPassword) {
+        @AssertTrue(message = "Passwords must match") public boolean isPasswordConfirmed() { return newPassword != null && newPassword.equals(confirmPassword); }
+    }
+    public record ResetTokenResponse(String resetToken, long expiresInSeconds) { }
     public record UserView(Long id, String fullName, String email, String mobile, String role, Instant createdAt) {
         static UserView from(com.freshmart.api.user.User u) { return new UserView(u.getId(), u.getFullName(), u.getEmail(), u.getMobile(), u.getRole(), u.getCreatedAt()); }
     }
