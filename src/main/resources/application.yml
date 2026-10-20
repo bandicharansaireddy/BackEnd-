@@ -24,6 +24,8 @@ app:
     issuer: ${JWT_ISSUER:freshmart-local}
     secret: ${JWT_SECRET:}
     access-minutes: ${JWT_ACCESS_MINUTES:15}
+    refresh-days: ${JWT_REFRESH_DAYS:30}
+    refresh-secure: ${JWT_REFRESH_SECURE:false}
 management:
   endpoints:
     web:

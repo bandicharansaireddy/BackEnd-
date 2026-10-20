@@ -24,6 +24,7 @@ class CatalogControllerTest {
     @Autowired private MockMvc mvc;
     @MockitoBean private ProductRepository products;
     @MockitoBean private CategoryRepository categories;
+    @MockitoBean private com.freshmart.api.auth.JwtAuthenticationFilter jwtFilter;
 
     @Test
     void searchPassesValidatedFiltersToRepository() throws Exception {

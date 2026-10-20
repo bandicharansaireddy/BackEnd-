@@ -8,9 +8,10 @@ Spring Boot 3 / Java 17 API for the separate FreshMart frontend repository. The 
 - Flyway `V1` creates categories and products and seeds a small illustrative catalog
 - Public product/category read APIs with paging, search, category, price filtering, and sorting
 - DTO responses, CORS origin configuration, and Hibernate schema validation
+- Registration, email/mobile login, BCrypt password hashes, `/me`, short-lived issuer-checked JWT access tokens, and rotating hashed refresh sessions in HttpOnly cookies
 - MySQL credentials and JWT signing secret are read from the environment
 
-Authentication, refresh-token rotation, accounts, cart, addresses, orders, and admin APIs remain future milestones. Do not treat this API as production-ready until those flows and their tests are implemented.
+Password reset OTP, change password, persistent carts, addresses, orders, admin APIs, and complete session invalidation remain future milestones. Do not treat this API as production-ready until those flows and their tests are implemented.
 
 ## Prerequisites
 
@@ -41,7 +42,10 @@ $env:DB_URL = 'jdbc:mysql://localhost:3306/freshmart?useSSL=false&allowPublicKey
 $env:DB_USERNAME = 'freshmart'
 $env:DB_PASSWORD = '<your-local-database-password>'
 $env:FRONTEND_ORIGIN = 'http://localhost:5173'
-$env:JWT_SECRET = '<a-random-base64-secret-of-at-least-32-bytes>'
+$keyBytes = New-Object byte[] 48
+[Security.Cryptography.RandomNumberGenerator]::Fill($keyBytes)
+$env:JWT_SECRET = [Convert]::ToBase64String($keyBytes)
+[Array]::Clear($keyBytes, 0, $keyBytes.Length)
 mvn spring-boot:run
 ```
 
@@ -56,13 +60,18 @@ GET http://localhost:8080/api/products?q=mango&category=fruit&page=0&size=12&sor
 GET http://localhost:8080/api/products/1
 GET http://localhost:8080/api/categories
 GET http://localhost:8080/api/categories/1/products?page=0&size=12
+POST http://localhost:8080/api/auth/register
+POST http://localhost:8080/api/auth/login
+POST http://localhost:8080/api/auth/refresh
+POST http://localhost:8080/api/auth/logout
+GET http://localhost:8080/api/auth/me  (Authorization: Bearer <short-lived access token>)
 ```
 
 See `docs/freshmart-api.postman_collection.json` for an importable Postman collection. Product responses use a stable `content`, `number`, `size`, and totals page envelope. Prices are server-owned INR values; clients must not submit totals for order calculation.
 
 ## Security status
 
-JWT dependencies and environment properties are present as architecture groundwork. Authentication endpoints and JWT validation are not implemented yet. Public catalog reads are open; all other request paths require authentication, and no payment-card data is collected. Cookie refresh transport, CSRF strategy, OTP delivery, abuse limits, session revocation, and authorization tests are required before real use.
+Refresh cookies are HttpOnly, SameSite=Strict, scoped to `/api/auth`, and use the configurable Secure flag (`app.jwt.refresh-secure`, enable it for HTTPS deployments). Refresh and logout require the exact configured frontend `Origin`. Access tokens are returned in JSON and should remain in frontend memory; the refresh token is never returned to JavaScript. Logout revokes the supplied refresh session; access JWTs expire after a short configured lifetime. Public catalog/auth entry points are open; other routes require a valid signed JWT. Password reset OTP delivery, rate limits, password change, invalidating all sessions after reset, admin roles, and broader authorization tests remain unfinished. No payment-card data is collected.
 
 ## Build and tests
 
