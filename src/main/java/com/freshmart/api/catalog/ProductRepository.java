@@ -1,6 +1,7 @@
 package com.freshmart.api.catalog;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.*;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.repository.query.Param;
 import java.math.BigDecimal;
 public interface ProductRepository extends JpaRepository<Product,Long>{
@@ -8,4 +9,7 @@ public interface ProductRepository extends JpaRepository<Product,Long>{
  Page<Product> search(@Param("category") String category,@Param("search") String search,@Param("minPrice") BigDecimal minPrice,@Param("maxPrice") BigDecimal maxPrice,Pageable pageable);
  Page<Product> findByActiveTrueAndCategory_Slug(String slug,Pageable pageable);
  java.util.Optional<Product> findByIdAndActiveTrue(Long id);
+ @Lock(LockModeType.PESSIMISTIC_WRITE)
+ @Query("select p from Product p where p.id = :id and p.active = true")
+ java.util.Optional<Product> findActiveByIdForUpdate(@org.springframework.data.repository.query.Param("id") Long id);
 }

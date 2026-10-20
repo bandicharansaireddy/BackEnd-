@@ -10,9 +10,10 @@ Spring Boot 3 / Java 17 API for the separate FreshMart frontend repository. The 
 - DTO responses, CORS origin configuration, and Hibernate schema validation
 - Registration, email/mobile login, BCrypt password hashes, `/me`, short-lived issuer-checked JWT access tokens, and rotating hashed refresh sessions in HttpOnly cookies
 - Forgot-password OTP creation/verification, attempt and expiry checks, password change/reset, and refresh-session revocation
+- Owner-scoped persistent carts and delivery addresses, plus transactional order creation with product locks, server-calculated totals, and stock updates
 - MySQL credentials and JWT signing secret are read from the environment
 
-Persistent carts, addresses, orders, admin APIs, and a production mail/SMS provider remain future milestones. Do not treat this API as production-ready until those flows and their tests are implemented.
+Admin product/category/order management, user administration, a production mail/SMS provider, and full database integration testing remain future milestones. Orders are recorded as `DEMO_UNPAID`; this project does not process payment.
 
 ## Prerequisites
 
@@ -70,9 +71,20 @@ POST http://localhost:8080/api/auth/forgot-password
 POST http://localhost:8080/api/auth/verify-otp
 POST http://localhost:8080/api/auth/reset-password
 PUT  http://localhost:8080/api/auth/change-password  (Authorization: Bearer <short-lived access token>)
+GET  http://localhost:8080/api/cart                 (Authorization: Bearer <short-lived access token>)
+POST http://localhost:8080/api/cart/items           (Authorization: Bearer <short-lived access token>)
+PUT  http://localhost:8080/api/cart/items/{id}      (Authorization: Bearer <short-lived access token>)
+DELETE http://localhost:8080/api/cart/items/{id}    (Authorization: Bearer <short-lived access token>)
+GET  http://localhost:8080/api/addresses            (Authorization: Bearer <short-lived access token>)
+POST http://localhost:8080/api/addresses            (Authorization: Bearer <short-lived access token>)
+POST http://localhost:8080/api/orders               (Authorization: Bearer <short-lived access token>)
+GET  http://localhost:8080/api/orders               (Authorization: Bearer <short-lived access token>)
+GET  http://localhost:8080/api/orders/{id}          (Authorization: Bearer <short-lived access token>)
 ```
 
-See `docs/freshmart-api.postman_collection.json` for an importable Postman collection. Product responses use a stable `content`, `number`, `size`, and totals page envelope. Prices are server-owned INR values; clients must not submit totals for order calculation.
+Cart item request: `{"productId":1,"quantity":2}`. Address request: `{"fullName":"Fresh Buyer","mobile":"9876543210","addressLine":"12 Market Road, Jubilee Hills","city":"Hyderabad","pincode":"500033"}`. Place an order with `{"addressId":1}`; the API reads the authenticated user's cart, checks stock under product row locks, computes subtotal and delivery fee, decrements inventory, clears the cart, and returns an order marked `DEMO_UNPAID`. Clients must not submit prices or totals.
+
+See `docs/freshmart-api.postman_collection.json` for an importable Postman collection. Product and order lists use a stable `content`, `number`, `size`, and totals page envelope.
 
 ## Security status
 

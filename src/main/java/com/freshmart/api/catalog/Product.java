@@ -16,4 +16,5 @@ public class Product {
  public Long getId(){return id;} public String getName(){return name;} public String getDescription(){return description;}
  public BigDecimal getPriceInr(){return priceInr;} public String getUnit(){return unit;} public int getStockQuantity(){return stockQuantity;}
  public String getImageUrl(){return imageUrl;} public Long getCategoryId(){return category.getId();} public String getCategoryName(){return category.getName();}
+ public boolean isActive(){return active;} public void setStockQuantity(int quantity){this.stockQuantity=quantity;}
 }
